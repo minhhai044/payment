@@ -11,7 +11,7 @@
 <body>
     <form action="{{route('index')}}" method="post">
         @csrf
-        <input type="text" name="" value="1"> 
+        <input type="text" name="amount"> 
         <button type="submit">Thanh toán</button>
     </form>
     {{-- <script>
