@@ -39,18 +39,19 @@ class PaymentController extends Controller
         $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
         $orderInfo = "Thanh toán qua MoMo";
         $amount = $request->amount;
-        $orderId = time() . "";
+        $orderId = time() . ""; //
         $redirectUrl = "http://payment.test/api/checkout";
         $ipnUrl = "https://hehe.test/check-out";
         $extraData = "";
 
         $requestId = time() . "";
         $requestType = "payWithATM";
-        // $extraData = ($_POST["extraData"] ? $_POST["extraData"] : "");
 
-        //before sign HMAC SHA256 signature
+
+        // Tạo chữ ký HMAC SHA256
         $rawHash = "accessKey=" . $accessKey . "&amount=" . $amount . "&extraData=" . $extraData . "&ipnUrl=" . $ipnUrl . "&orderId=" . $orderId . "&orderInfo=" . $orderInfo . "&partnerCode=" . $partnerCode . "&redirectUrl=" . $redirectUrl . "&requestId=" . $requestId . "&requestType=" . $requestType;
         $signature = hash_hmac("sha256", $rawHash, $secretKey);
+
         $data = array(
             'partnerCode' => $partnerCode,
             'partnerName' => "Test",
@@ -66,8 +67,10 @@ class PaymentController extends Controller
             'requestType' => $requestType,
             'signature' => $signature
         );
+
         $result = $this->execPostRequest($endpoint, json_encode($data));
         $jsonResult = json_decode($result, true);  // decode json
+
         if ($request->amount) {
             return response()->json([
                 'url' => $jsonResult['payUrl']
@@ -81,18 +84,18 @@ class PaymentController extends Controller
     public function checkout(Request $request)
     {
         $resultCode = $request->query('resultCode');
+
+
         if ($resultCode == 0) {
-            // Giao dịch thành công
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Thanh toán thành công!'
-            ]);
+            $message = 'Thanh toán thành công!';
         } else {
-            // Giao dịch thất bại
-            return response()->json([
-                'status' => 'failed',
-                'message' => "Thanh toán thất bại!"
-            ]);
+            $message = 'Thanh toán thất bại!';
         }
+        
+        $frontendUrl = "http://127.0.0.1:5500/index.html";
+        // $redirectUrl = $frontendUrl . '?status=' . ($resultCode == 0 ? 'success' : 'failed') . '&message=' . urlencode($message);
+
+        return redirect($frontendUrl);
     }
+
 }
