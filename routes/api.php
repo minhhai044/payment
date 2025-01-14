@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SeatTemplateController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -21,3 +22,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/index',[PaymentController::class,'index']);
 Route::get('/checkout',[PaymentController::class,'checkout']);
 // Route::get('/getPaymentStatus',[PaymentController::class,'getPaymentStatus']);
+Route::post('/store',[SeatTemplateController::class,'store']);
+Route::put('{id}/updateSeatStructure',[SeatTemplateController::class,'updateSeatStructure']);
+Route::get('{id}/getJson',[SeatTemplateController::class,'getJson']);

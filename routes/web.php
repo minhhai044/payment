@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SeatTemplateController;
 use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,3 +19,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::post('/index',[PaymentController::class,'index'])->name('index');
+Route::get('{id}/show',[SeatTemplateController::class,'show'])->name('show');
