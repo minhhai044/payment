@@ -132,11 +132,15 @@ class SeatTemplateController extends Controller
 
             // Thực hiện cập nhật
             $seatTemplate->update($dataSeatTemplate);
-            return redirect()->back()
-                ->with('success', 'Thao tác thành công');
-        } catch (\Throwable $th) {
-            // Trả về thông báo lỗi nếu có ngoại lệ xảy ra
-            return back()->with('error', 'Có lỗi xảy ra: ' . $th->getMessage());
+            return response()->json([
+                'messenger' => 'Thao tác thành công !!!',
+                'data' =>  $seatTemplate,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'messenger' => 'Thao tác không thành công !!!',
+                'error' =>  $e,
+            ]);
         }
     }
     public function getJson(string $id)
@@ -149,21 +153,19 @@ class SeatTemplateController extends Controller
     }
     public function show(string $id)
     {
-        // Lấy cấu trúc ma trận từ hằng số MATRIXS
+
         $seatTemplate = SeatTemplate::findOrFail($id);
-   
+
         $matrix = SeatTemplate::getMatrixById($seatTemplate->matrix_id);
 
-        // Giải mã dữ liệu ghế từ trường seat_structure
-        // $seats = json_decode($seatTemplate->seat_structure, true);
-  
+        $seats = json_decode($seatTemplate->seat_structure, true);
         $seatMap = [];
 
-        // Đếm tổng số ghế
-        $totalSeats = 0; // Khởi tạo biến tổng số ghế
 
-        // if ($seats) {
-            foreach ($seatTemplate->seat_structure as $seat) {
+        $totalSeats = 0;
+
+        if ($seats) {
+            foreach ($seats as $seat) {
                 $coordinates_y = $seat['coordinates_y'];
                 $coordinates_x = $seat['coordinates_x'];
 
@@ -173,17 +175,18 @@ class SeatTemplateController extends Controller
 
                 $seatMap[$coordinates_y][$coordinates_x] = $seat['type_seat_id'];
 
-                // Tăng tổng số ghế
                 if ($seat['type_seat_id'] == 3) {
-                    // Ghế đôi, cộng thêm 2
                     $totalSeats += 2;
                 } else {
-                    // Ghế thường hoặc ghế VIP, cộng thêm 1
                     $totalSeats++;
                 }
             }
-        // }
-        return view('hehe', compact('matrix', 'seatTemplate', 'seatMap', 'totalSeats'));
-
+        }
+        return response()->json([
+            'matrix' => $matrix,
+            'seatTemplate' => $seatTemplate,
+            'seatMap' => $seatMap,
+            'totalSeats' => $totalSeats
+        ]);
     }
 }
