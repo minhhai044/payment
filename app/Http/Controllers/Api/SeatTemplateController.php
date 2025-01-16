@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\SeatTemplate;
+use App\Models\TypeSeat;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Validator;
@@ -11,6 +12,21 @@ use Illuminate\Validation\Rule;
 
 class SeatTemplateController extends Controller
 {
+    public function storeTypeSeat(Request $request)
+    {
+        try {
+            $TypeSeat = TypeSeat::query()->create($request->all());
+            return response()->json([
+                'messenger' => "Thao tác thành công !!!",
+                'data' => $TypeSeat
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'messenger' => "Thao tác không thành công !!!"
+            ]);
+        }
+    }
+    // Thêm template ghế
     public function store(Request $request)
     {
         //Lấy tất cả các trường id của matrixIds
@@ -118,18 +134,11 @@ class SeatTemplateController extends Controller
                 'is_active' => isset($request->is_active) ? 1 : 0, // Mặc định cập nhật is_active
             ];
             $seatTemplate = SeatTemplate::findOrFail($id);
-            if (!$seatTemplate->is_publish) {
-                // Nếu hành động là publish và chưa được publish trước đó
-                $dataSeatTemplate = array_merge($dataSeatTemplate, [
-                    'is_publish' => 1,
-                    'is_active' => 1,
-                    'seat_structure' => $request->seat_structure,
-                ]);
-            } elseif ($request->action === 'draft' && !$seatTemplate->is_publish) {
-                // Nếu là hành động draft và chưa publish
-                $dataSeatTemplate['seat_structure'] = $request->seat_structure;
-            }
-
+            $dataSeatTemplate = array_merge($dataSeatTemplate, [
+                'is_publish' => 1,
+                'is_active' => 1,
+                'seat_structure' => json_encode($request->seat_structure),
+            ]);
             // Thực hiện cập nhật
             $seatTemplate->update($dataSeatTemplate);
             return response()->json([
@@ -164,6 +173,12 @@ class SeatTemplateController extends Controller
 
         $totalSeats = 0;
 
+        // $seatMap = [];
+        // foreach ($seats as $seat) {
+        //     // dd($seat);
+        //     $seatMap[$seat->coordinates_y][$seat->coordinates_x] = $seat;
+        // }
+
         if ($seats) {
             foreach ($seats as $seat) {
                 $coordinates_y = $seat['coordinates_y'];
@@ -173,7 +188,7 @@ class SeatTemplateController extends Controller
                     $seatMap[$coordinates_y] = [];
                 }
 
-                $seatMap[$coordinates_y][$coordinates_x] = $seat['type_seat_id'];
+                $seatMap[$coordinates_y][$coordinates_x] = $seat;
 
                 if ($seat['type_seat_id'] == 3) {
                     $totalSeats += 2;
@@ -188,5 +203,12 @@ class SeatTemplateController extends Controller
             'seatMap' => $seatMap,
             'totalSeats' => $totalSeats
         ]);
+    }
+    public function showtime_seat(Request $request){
+        try {
+            
+        } catch (\Throwable $th) {
+            
+        }
     }
 }

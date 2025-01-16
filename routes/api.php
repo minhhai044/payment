@@ -26,3 +26,5 @@ Route::post('/store',[SeatTemplateController::class,'store']);
 Route::put('{id}/updateSeatStructure',[SeatTemplateController::class,'updateSeatStructure']);
 Route::get('{id}/getJson',[SeatTemplateController::class,'getJson']);
 Route::get('{id}/show',[SeatTemplateController::class,'show']);
+Route::post('/storeTypeSeat',[SeatTemplateController::class,'storeTypeSeat']);
+
