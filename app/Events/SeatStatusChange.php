@@ -9,33 +9,38 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Support\Facades\Log;
 
-class SeatStatusChange  implements ShouldBroadcastNow
+class SeatStatusChange implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $seatId;
-    public $showtimeId;
-    public $status; // Trạng thái ghế (hold, available, sold)
+    public $status;
+    public $type_seat;
 
-    /**
-     * Tạo event với các tham số cần thiết
-     */
-    public function __construct($seatId, $showtimeId, $status)
+    public function __construct($seatId, $status,$type_seat)
     {
         $this->seatId = $seatId;
-        $this->showtimeId = $showtimeId;
         $this->status = $status;
+        $this->type_seat = $type_seat;
     }
 
-
-    /**
-     * Định nghĩa kênh để phát sự kiện.
-     */
     public function broadcastOn()
     {
-        // Sự kiện sẽ được phát trên kênh showtime với id cụ thể
-        return new Channel('showtime.' . $this->showtimeId);
+        Log::info("SeatStatusChange event triggered for seat: {$this->seatId}, status: {$this->status}");
+        return new Channel('showtime');
+       
+        // return ['showtime'];
+    }
+
+    public function broadcastWith()
+    {
+        return [
+            'seatId' => $this->seatId,
+            'status' => $this->status,
+            'type_seat' => $this->type_seat,
+        ];
     }
 }
 

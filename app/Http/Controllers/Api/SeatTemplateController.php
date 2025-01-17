@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\SeatStatusChange;
 use App\Http\Controllers\Controller;
 use App\Models\SeatTemplate;
 use App\Models\TypeSeat;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -204,11 +206,66 @@ class SeatTemplateController extends Controller
             'totalSeats' => $totalSeats
         ]);
     }
-    public function showtime_seat(Request $request){
+    // public function showtime_seat(Request $request){
+    //     try {
+
+    //     } catch (\Throwable $th) {
+
+    //     }
+    // }
+    public function updateSeat(Request $request)
+    {
         try {
-            
-        } catch (\Throwable $th) {
-            
+            $SeatTemplate = SeatTemplate::findOrFail(1);
+            $seat_structure = json_decode($SeatTemplate->seat_structure);
+            $action = $request->action; // 'hold : chọn' hoặc 'release : bỏ'
+            $seat_id = $request->seat_id;
+            $type_seat = $request->type_seat;
+            $userId = 1;
+
+            DB::transaction(function () use ($action, &$seat_structure, $seat_id, $userId) {
+
+                foreach ($seat_structure as &$seatItem) {
+
+                    if ($seatItem->id == $seat_id) {
+                        if ($action === 'hold') {
+                            $seatItem->status = 'hold';
+                            $seatItem->user_id = $userId;
+                        }
+                        if ($action === 'release') {
+                            $seatItem->status = 'available';
+                            $seatItem->user_id = null;
+                        }
+                    }
+                }
+            });
+            // Cập nhật lại JSON sau khi thay đổi
+            $SeatTemplate->seat_structure = json_encode($seat_structure);
+
+            // Lưu lại vào cơ sở dữ liệu
+            $SeatTemplate->save();
+
+            // Lấy lại dữ liệu ghế sau khi transaction thành công
+            // $seatData = DB::table('seat_showtimes')
+            //     ->where('seat_id', $seatId)
+            //     ->where('showtime_id', $showtimeId)
+            //     ->first();
+
+            // // Phát sự kiện sau khi transaction hoàn tất
+            if ($action === 'hold') {
+                broadcast(new SeatStatusChange($seat_id, 'hold',$type_seat))->toOthers();
+                // ReleaseSeatHoldJob::dispatch([$seatData->seat_id], $showtimeId, null)->delay($holdExpiresAt);
+            } elseif ($action === 'release') {
+                broadcast(new SeatStatusChange($seat_id, 'available',$type_seat))->toOthers();
+            }
+
+
+            return response()->json(['message' => 'Cập nhật trạng thái ghế thành công.'], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Có lỗi xảy ra khi cập nhật trạng thái ghế.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
